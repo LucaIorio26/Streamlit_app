@@ -39,12 +39,13 @@ df.isna().any()
 # Sproporzione tra decessi e sopravvissuti
 df['Decesso' ].value_counts() 
 
-
 # Correzioni di Eta e Piastrine
 data = pd.DataFrame(df)
 data.loc[data['Eta'] == 60667, 'Eta'] = 61
 
 data.loc[data['Piastrine'] == 26335803, 'Piastrine'] = 263358
+
+
 
 #Controllo delle correzioni
 data.describe()
@@ -158,27 +159,20 @@ print (f'Chi-square Statistic Decesso-Rischio : {chi2} ,p-value: {p}')
 quantitative = data[['Eta','Frazione_di_Eiezione','Creatinina','Sodio','Giorni','CPK','Piastrine']]
 qualitative = data[['Genere','Fumatore','Diabete','Rischio']]
 y = data['Decesso']
-
-
 scaler = StandardScaler()
 scaler.fit(quantitative)
 quantitative_scale = scaler.transform(quantitative)
 
+
 X_scale = pd.DataFrame(quantitative_scale)
 X_scale = X_scale.join(qualitative)
-
 X_scale=X_scale.rename(columns={0: 'Eta', 1: 'Frazione_di_Eiezione',
                                 2: 'Creatinina',3: 'Sodio',4: 'Giorni',5:'CPK',6:'Piastrine','Genere':'Genere',
                                 'Fumatore':'Fumatore','Diabete':'Diabete','Rischio':'Rischio'})
 
-
-
-# Train-test split
+#Train test split 
 X_train, X_test, y_train, y_test = train_test_split(X_scale, y, random_state=1234, stratify=y, test_size=.25)
-
-#Controllo delle dimensioni di train e test
 print(X_train.shape, X_test.shape, y_train.shape, y_test.shape)
-
 
 
 #Feature Importance con Random Forests
@@ -205,10 +199,6 @@ plt.axvline(0.09, 0,color='black',linestyle='--')
 # Si decide di prendere le prime 4 variabili : RISCHIO, GIORNI, FRAZIONE DI EIEZIONE E CREATININA
 X_train = X_train[['Frazione_di_Eiezione','Rischio','Giorni','Creatinina']]
 X_test = X_test[['Frazione_di_Eiezione','Rischio','Giorni','Creatinina']]
-
-
-
-
 
 # ENSEMBLE
 
@@ -341,7 +331,7 @@ f1_random_forest = metrics.f1_score(y_test,pred_rand_forest)
 
 
 # Bar plot della recall
-recall_score = [ recall_tree, recall_naive, recall_knn, recall_svm, recall_log_reg, recall_gb, recall_random_forest]
+recall_score = [recall_tree, recall_naive, recall_knn, recall_svm, recall_log_reg, recall_gb, recall_random_forest]
  
 algorithm = ['DECISION TREE', 'NAIVE',  'KNN','SVM','LOGISTIC',  'GRADIENT BOOSTING', 'RANDOM FOREST', ]
 data_plot = pd.DataFrame(recall_score,algorithm)
@@ -350,13 +340,11 @@ sns.catplot(data=data_plot, x=recall_score, y=algorithm, kind='bar',height=6,asp
 plt.show()
 
 
+#CURVE ROC
 
 
 
-
-# Curve ROC
-
-
+plt.figure(figsize=(10, 8))
 
 
 models = [{
@@ -379,7 +367,6 @@ models = [{
     {
     'label': 'KNN',
     'model': KNeighborsClassifier(),}]
-plt.figure(figsize=(10, 8))
 
 for m in models:
     model = m['model'] 
@@ -401,6 +388,20 @@ plt.ylabel('Sensitività(True Positive Rate)')
 plt.title('Curve ROC')
 plt.legend(loc="lower right", prop={'size': 13})
 plt.show() 
+
+
+#DECISION TREE PLOT
+from sklearn.tree import export_graphviz
+
+clf=DecisionTreeClassifier(random_state=1234,max_depth=3)
+clf.fit(X_train,y_train)
+predictions_clf = clf.predict(X_test)
+score_clf = metrics.accuracy_score(y_test,predictions_clf)
+
+plt.style.use('classic')
+fig = plt.figure(figsize=(200,200))
+plot_albero= tree.plot_tree(clf,feature_names=['Frazione_di_Eiezione','Creatinina','Giorni','Rischio'],
+                   class_names=['Sopravvissuti','Deceduti'],filled=True)
 
 
 
@@ -478,7 +479,6 @@ pred_gb_cv = gb_cv.predict(X_test)
 score_gb_cv = gb_cv.score(X_test, y_test)
 
 
-
 # METRICHE DOPO LA GRID SEARCH
 #recall
 recall_log_reg_cv = metrics.recall_score(y_test,pred_log_reg_cv)
@@ -496,32 +496,73 @@ accuracy_gb_cv = metrics.accuracy_score(y_test,pred_gb_cv)
 accuracy_knn_cv = metrics.accuracy_score(y_test,pred_knn_cv)
 accuracy_tree_cv = metrics.accuracy_score(y_test,pred_tree_cv)
 
-# Bar plot accuracy e recall dopo la grid search
+#PRECISION
+precision_score_tree_cv = metrics.precision_score(y_test,pred_tree_cv)
+precision_score_log_reg_cv = metrics.precision_score(y_test,pred_log_reg_cv)
+precision_score_gb_cv = metrics.precision_score(y_test,pred_gb_cv)
+precision_score_knn_cv = metrics.precision_score(y_test,pred_knn_cv)
+precision_score_svm_cv= metrics.precision_score(y_test,pred_svm_cv)
+precision_score_random_forest_cv = metrics.precision_score(y_test,pred_rand_forest_cv)
+
+#F1 SCORE
+f1_score_tree_cv = metrics.f1_score(y_test,pred_tree_cv)
+f1_score_log_reg_cv = metrics.f1_score(y_test,pred_log_reg_cv)
+f1_score_gb_cv = metrics.f1_score(y_test,pred_gb_cv)
+f1_score_knn_cv= metrics.f1_score(y_test,pred_knn_cv)
+f1_score_svm_cv = metrics.f1_score(y_test,pred_svm_cv)
+f1_score_random_forest_cv = metrics.f1_score(y_test,pred_rand_forest_cv)
+
+
+# Bar plot con tutte le metriche usate
 accuracy = [accuracy_log_reg_cv,accuracy_knn_cv,
             accuracy_tree_cv, accuracy_random_forest_cv,
             accuracy_svm_cv, accuracy_gb_cv]
 
+precision = [precision_score_log_reg_cv,precision_score_knn_cv,
+            precision_score_tree_cv, precision_score_random_forest_cv,
+            precision_score_svm_cv, precision_score_gb_cv]
+
 recall = [recall_log_reg_cv,recall_knn_cv,
             recall_tree_cv, recall_random_forest_cv,
             recall_svm_cv, recall_gb_cv]
+
+f1  = [f1_score_log_reg_cv,f1_score_knn_cv,
+            f1_score_tree_cv, f1_score_random_forest_cv,
+            f1_score_svm_cv, f1_score_gb_cv]
+
 
 algorithm = ['LOGISTIC CV','KNN CV', 'DECISION TREE CV', 'RANDOM FOREST CV',
              'SVM CV', 'GRADIENT BOOSTING CV']
 
 data_plot = pd.DataFrame(accuracy,index=algorithm,columns=['Accuracy'])
 data_plot['Recall'] = recall
+data_plot['Precision'] = precision
+data_plot['F1 Score'] = f1
 data_plot['Algoritmi'] = algorithm
+
 data_plot = pd.melt(data_plot, id_vars = "Algoritmi")
 
 plt.figure(figsize=(15,13))
+colors = ["#450085", "#00846b"]
+sns.set_palette(sns.color_palette(colors))
+sns.set_theme(style="whitegrid")
 sns.barplot(y = "Algoritmi", x='value', hue = 'variable',data=data_plot, orient="h",palette='viridis')
 plt.show()
 
 
-# Logistic Regression
+#MIGLIORI IPERPARAMETRI PER GRADIENT BOOSTING (verrà usato in seguito)
+classifier = gb_cv.best_estimator_
+
+
+
+#Digressione sulla regressione logistica
+
+import statsmodels.api as sm
+from statsmodels.formula.api import logit
+
+
 dataset = data[['Decesso','Eta','CPK','Frazione_di_Eiezione','Piastrine','Creatinina','Sodio','Giorni',
                 'Genere','Anemia','Fumatore','Diabete','Ipertensione','Rischio']]
-
 
 train, test = train_test_split(dataset, random_state=1234,stratify=dataset['Decesso'], test_size=.25)
 
@@ -530,51 +571,3 @@ formula = ('Decesso ~ Eta + Frazione_di_Eiezione + Giorni + Rischio + Sodio ')
 model = logit(formula = formula, data=train).fit()
 
 model.summary() 
-
-#Predict
-predict = model.predict(test)
-cutoff = 0.5
-predicted_labels = np.where(predict > cutoff, 1, 0)
-actual_labels = test['Decesso']
-
-#Matrice di confusione
-plt.figure(figsize=(10,8))
-cm = metrics.confusion_matrix(actual_labels, predicted_labels)
-sns.heatmap(cm,annot=True,square=True,cmap='inferno')
-plt.ylabel('ACTUAL LABEL')
-plt.xlabel('PREDICTED LABEL')
-plt.title(f'LOGISTIC REGRESSION CONFUSION MATRIX')
-plt.show()
-
-#Recall e Accuracy
-recall_score(actual_labels,predicted_labels)
-accuracy_score(actual_labels,predicted_labels)
-
-#Odds Ratio
-odds = np.exp(model.params)
-1-odds
-
-
-#Predictions
-predict = model.predict(test)
-cutoff = 0.5
-predicted_labels = np.where(predict > cutoff, 1, 0)
-actual_labels = test['Decesso']
-
-#Matrice di confusione
-plt.figure(figsize=(10,8))
-cm = metrics.confusion_matrix(actual_labels, predicted_labels)
-sns.heatmap(cm,annot=True,square=True,cmap='inferno')
-plt.ylabel('ACTUAL LABEL')
-plt.xlabel('PREDICTED LABEL')
-plt.title(f'LOGISTIC REGRESSION CONFUSION MATRIX')
-plt.show()
-
-#Recall e Accuracy
-recall_score(actual_labels,predicted_labels)
-accuracy_score(actual_labels,predicted_labels)
-
-#Odds Ratio
-odds = np.exp(model.params)
-1-odds
-
