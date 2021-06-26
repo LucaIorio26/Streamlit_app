@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import streamlit as st
 from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 
 #Url del dataset caricato su github
@@ -33,9 +33,9 @@ y = data['DEATH_EVENT']
 
 #Addestramento del classificatore
 X_train, X_test, y_train, y_test = train_test_split(X_scale, y, test_size=0.20, random_state=1234)
-classifier = GradientBoostingClassifier(learning_rate=0.05, loss='exponential',
-                                        max_features='log2', min_samples_leaf=6,
-                                        n_estimators=200, random_state=1234, subsample=0.6)
+
+classifier = RandomForestClassifier(criterion='entropy', max_depth=7, random_state=1234)
+
 classifier.fit(X_train, y_train)
 predictions = classifier.predict(X_test)
 score = classifier.score(X_test, y_test)
