@@ -341,9 +341,6 @@ plt.show()
 
 
 #CURVE ROC
-
-
-
 plt.figure(figsize=(10, 8))
 
 
@@ -405,35 +402,38 @@ plot_albero= tree.plot_tree(clf,feature_names=['Frazione_di_Eiezione','Creatinin
 
 
 
-# GRID SEARCH CON 5-FOLD CROSS VALIDATION
+# GRID SEARCH CON 10 -FOLD CROSS VALIDATION
 
 # IPERPARAMETRI
-grid_log_reg = {'C': [0.01, 0.1, 1]}
+grid_log_reg = {'C':[0.001,.009,0.01,0.09,1,5,10,25]}
 
-grid_svm = [{'kernel': ['rbf'],'C': [0.1, 0.5, 1,10,100]},
-            {'kernel': ['linear', 'poly'],  'C': [0.1, 0.5, 1, 10, 100]}]
+grid_svm = [{'kernel': ['rbf'], 'gamma': [1e-3, 1e-4],
+                     'C': [0.01,1, 10, 100, 1000]},
+                    {'kernel': ['linear','poly','sigmoid'], 'C': [0.01,1, 10, 100, 1000]}]
 
-grid_rand_forest = {
-    'max_depth': [80, 90, 100],
-    'max_features': [2,3,4,5],
-    'n_estimators': [100,200,300,400,500]}
+grid_rand_forest = {'criterion' :['gini', 'entropy'],
+    'max_depth': [3, 5, 6, 7],
+    'min_samples_split': [2, 5, 10],
+    'max_features': [2,3,4],
+    'n_estimators': [50,100,200,500],
+    'max_features': ['auto', 'sqrt', 'log2']}
 
 
-grid_knn = {'n_neighbors':[2,3,4,5,6,7,8,9,10,12,15,18,20,25], 'metric':['manhattan','euclidean']}
+grid_knn = {'n_neighbors':[2,3,4,5,6,7,8,9,10,12,15,18,20,25,30], 'metric':['manhattan','euclidean']}
 
-grid_tree = {'criterion':['gini','entropy'],'max_depth':[3,4,5,6,7,8,9,10,20,50,75,100]}
+grid_tree = {'criterion':['gini','entropy'],
+             'max_depth':[4,5,6,7,8,9,10,11,12,15,20,30,40,50,70,90,120,150]}
 
 grid_gb = {"criterion": ["friedman_mse",  "mae"],
-              "loss":["deviance","exponential"],
+              "loss":["deviance"],
               "max_features":["log2","sqrt"],
-              'learning_rate': [0.01,0.05,0.1],
+              'learning_rate': [0.01,0.05,0.1, 0.2],
               'max_depth': [3,4,5],
               'min_samples_leaf': [4,5,6],
               'subsample': [0.6,0.7,0.8],
-              'n_estimators': [50,100,200]}
+              'n_estimators': [10,100,200]}
 
 
-# 5 Fold cross validation con grid search
 
 log_reg = LogisticRegression(random_state=1234)
 knn = KNeighborsClassifier()
@@ -443,40 +443,44 @@ svm = SVC(random_state=1234)
 gb = GradientBoostingClassifier(random_state=1234)
 
 
-log_reg_cv = GridSearchCV(log_reg, grid_log_reg, cv=5)
+log_reg_cv = GridSearchCV(log_reg, grid_log_reg, cv=10, scoring = 'recall')
 log_reg_cv.fit(X_train,y_train)
 pred_log_reg_cv = log_reg_cv.predict(X_test)
 score_log_reg_cv = log_reg_cv.score(X_test,y_test)
 
 
-
-knn_cv = GridSearchCV(knn, grid_knn, cv=5)
+knn_cv = GridSearchCV(knn, grid_knn, cv=10, scoring = 'recall')
 knn_cv.fit(X_train,y_train)
 pred_knn_cv = knn_cv.predict(X_test)
 score_knn_cv = knn_cv.score(X_test,y_test)
 
 
-svm_cv = GridSearchCV(svm, grid_svm, cv=5)
+svm_cv = GridSearchCV(svm, grid_svm, cv=10, scoring = 'recall')
 svm_cv.fit(X_train,y_train)
 pred_svm_cv = svm_cv.predict(X_test)
 score_svm_cv = svm_cv.score(X_test,y_test)
 
-tree_cv = GridSearchCV(tree, grid_tree, cv=5)
-tree_cv.fit(X_train,y_train)
-pred_tree_cv = tree_cv.predict(X_test)
-score_tree_cv = tree_cv.score(X_test,y_test)
 
 
-rand_forest_cv = GridSearchCV(rand_forest, grid_rand_forest, cv=5)
+rand_forest_cv = GridSearchCV(rand_forest, grid_rand_forest, cv=10, scoring = 'recall')
 rand_forest_cv.fit(X_train, y_train)
 pred_rand_forest_cv = rand_forest_cv.predict(X_test)
 score_rand_forest_cv = rand_forest_cv.score(X_test, y_test)
 
 
-gb_cv = GridSearchCV(gb, grid_gb, cv=5)
+tree_cv = GridSearchCV(tree, grid_tree, cv=10, scoring = 'recall')
+tree_cv.fit(X_train,y_train)
+pred_tree_cv = tree_cv.predict(X_test)
+score_tree_cv = tree_cv.score(X_test,y_test)
+
+gb_cv = GridSearchCV(gb, grid_gb, cv=10, scoring = 'recall')
 gb_cv.fit(X_train, y_train)
 pred_gb_cv = gb_cv.predict(X_test)
 score_gb_cv = gb_cv.score(X_test, y_test)
+
+
+
+
 
 
 # METRICHE DOPO LA GRID SEARCH
@@ -512,46 +516,48 @@ f1_score_knn_cv= metrics.f1_score(y_test,pred_knn_cv)
 f1_score_svm_cv = metrics.f1_score(y_test,pred_svm_cv)
 f1_score_random_forest_cv = metrics.f1_score(y_test,pred_rand_forest_cv)
 
-
-# Bar plot con tutte le metriche usate
-accuracy = [accuracy_log_reg_cv,accuracy_knn_cv,
-            accuracy_tree_cv, accuracy_random_forest_cv,
-            accuracy_svm_cv, accuracy_gb_cv]
-
-precision = [precision_score_log_reg_cv,precision_score_knn_cv,
-            precision_score_tree_cv, precision_score_random_forest_cv,
-            precision_score_svm_cv, precision_score_gb_cv]
-
-recall = [recall_log_reg_cv,recall_knn_cv,
-            recall_tree_cv, recall_random_forest_cv,
-            recall_svm_cv, recall_gb_cv]
-
-f1  = [f1_score_log_reg_cv,f1_score_knn_cv,
-            f1_score_tree_cv, f1_score_random_forest_cv,
-            f1_score_svm_cv, f1_score_gb_cv]
+#AUC
+auc_tree_cv = metrics.roc_auc_score(y_test,pred_tree_cv)
+auc_log_reg_cv = metrics.roc_auc_score(y_test,pred_log_reg_cv)
+auc_gb_cv = metrics.roc_auc_score(y_test,pred_gb_cv)
+auc_knn_cv = metrics.roc_auc_score(y_test,pred_knn_cv)
+auc_svm_cv = metrics.roc_auc_score(y_test,pred_svm_cv)
+auc_random_forest_cv = metrics.roc_auc_score(y_test,pred_rand_forest_cv)
 
 
-algorithm = ['LOGISTIC CV','KNN CV', 'DECISION TREE CV', 'RANDOM FOREST CV',
-             'SVM CV', 'GRADIENT BOOSTING CV']
 
-data_plot = pd.DataFrame(accuracy,index=algorithm,columns=['Accuracy'])
-data_plot['Recall'] = recall
-data_plot['Precision'] = precision
-data_plot['F1 Score'] = f1
+#BAR PLOT RECALL
+Recall_cv = [recall_tree_cv,recall_knn_cv,recall_svm_cv,recall_log_reg_cv,
+             recall_gb_cv, recall_random_forest_cv]
+
+Recall = [recall_tree, recall_knn, recall_svm, recall_log_reg, recall_gb, recall_random_forest]
+ 
+    
+algorithm = ['DECISION TREE',  'KNN','SVM','LOGISTIC',  'GRADIENT BOOSTING', 'RANDOM FOREST', ]
+
+data_plot = pd.DataFrame(recall,index=algorithm,columns=['Recall'])
+data_plot['Recall_cv'] = Recall_cv
+
 data_plot['Algoritmi'] = algorithm
 
 data_plot = pd.melt(data_plot, id_vars = "Algoritmi")
+data_plot=data_plot.rename(columns={'Algoritmi':'Algoritmi','variable':'Metriche','value':'Value'})
 
-plt.figure(figsize=(15,13))
-colors = ["#450085", "#00846b"]
+plt.figure(figsize=(30,28))
+colors = ["#450085", "#00846b",'red']
 sns.set_palette(sns.color_palette(colors))
 sns.set_theme(style="whitegrid")
-sns.barplot(y = "Algoritmi", x='value', hue = 'variable',data=data_plot, orient="h",palette='viridis')
+sns.catplot(x = "Algoritmi", y='Value', kind='bar',
+            hue = 'Metriche',data=data_plot, orient="v",
+            palette=colors)
+plt.xticks(rotation=30)
 plt.show()
+data_plot
 
 
-#MIGLIORI IPERPARAMETRI PER GRADIENT BOOSTING (verrà usato in seguito)
-classifier = gb_cv.best_estimator_
+#MIGLIOR CLASSIFICATORE 
+rand_forest_cv.best_estimator_
+classifier = RandomForestClassifier(criterion='entropy', max_depth=7, random_state=1234)
 
 
 
@@ -571,3 +577,36 @@ formula = ('Decesso ~ Eta + Frazione_di_Eiezione + Giorni + Rischio + Sodio ')
 model = logit(formula = formula, data=train).fit()
 
 model.summary() 
+
+
+#Predictions
+predict = model.predict(test)
+cutoff = 0.5
+predicted_labels = np.where(predict > cutoff, 1, 0)
+actual_labels = test['Decesso']
+
+#Matrice di confusione
+plt.figure(figsize=(10,8))
+cm = metrics.confusion_matrix(actual_labels, predicted_labels)
+sns.heatmap(cm,annot=True,square=True,cmap='inferno')
+plt.ylabel('ACTUAL LABEL')
+plt.xlabel('PREDICTED LABEL')
+plt.title(f'LOGISTIC REGRESSION CONFUSION MATRIX')
+plt.show()
+
+#Recall Accuracy e Precision
+metrics.recall_score(actual_labels,predicted_labels)
+metrics.accuracy_score(actual_labels,predicted_labels)
+metrics.precision_score(actual_labels,predicted_labels)
+metrics.f1_score(actual_labels,predicted_labels)
+
+
+#Odds Ratio
+odds = np.exp(model.params)
+1-odds
+
+
+
+
+
+
