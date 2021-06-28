@@ -16,7 +16,8 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.ensemble import RandomForestClassifier
+from xgboost.sklearn import XGBClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import GridSearchCV
 from sklearn import metrics
@@ -208,7 +209,7 @@ tree = DecisionTreeClassifier(random_state=1234)
 rand_forest = RandomForestClassifier(random_state=1234)
 svm = SVC(random_state=1234)
 naive = GaussianNB()
-gb = GradientBoostingClassifier(random_state=1234)
+xgb = XGBClassifier(seed=1234)
 
 
 tree.fit(X_train, y_train)
@@ -226,8 +227,8 @@ pred_svm = svm.predict(X_test)
 knn.fit(X_train, y_train)
 pred_knn = knn.predict(X_test)
 
-gb.fit(X_train, y_train)
-pred_gb = gb.predict(X_test)
+xgb.fit(X_train, y_train)
+pred_xgb = xgb.predict(X_test)
 
 rand_forest.fit(X_train, y_train)
 pred_rand_forest = rand_forest.predict(X_test)
@@ -283,11 +284,11 @@ plt.title('NAIVE BAYES CONFUSION MATRIX')
 plt.show()
 
 plt.figure(figsize=(10,8))
-cm = metrics.confusion_matrix(y_test, pred_gb)
+cm = metrics.confusion_matrix(y_test, pred_xgb)
 sns.heatmap(cm,annot=True,square=True,cmap='viridis')
 plt.ylabel('ACTUAL LABEL')
 plt.xlabel('PREDICTED LABEL')
-plt.title('GRADIENT BOOSTING CONFUSION MATRIX')
+plt.title('XGBoost CONFUSION MATRIX')
 plt.show()
 
 
@@ -297,7 +298,7 @@ plt.show()
 recall_tree = metrics.recall_score(y_test,pred_tree)
 recall_log_reg = metrics.recall_score(y_test,pred_log_reg)
 recall_naive = metrics.recall_score(y_test,pred_naive)
-recall_gb = metrics.recall_score(y_test,pred_gb)
+recall_xgb = metrics.recall_score(y_test,pred_xgb)
 recall_knn = metrics.recall_score(y_test,pred_knn)
 recall_svm = metrics.recall_score(y_test,pred_svm)
 recall_random_forest = metrics.recall_score(y_test,pred_rand_forest)
@@ -306,7 +307,7 @@ recall_random_forest = metrics.recall_score(y_test,pred_rand_forest)
 accuracy_score_tree = metrics.accuracy_score(y_test,pred_tree)
 accuracy_score_log_reg = metrics.accuracy_score(y_test,pred_log_reg)
 accuracy_score_naive = metrics.accuracy_score(y_test,pred_naive)
-accuracy_score_gb = metrics.accuracy_score(y_test,pred_gb)
+accuracy_score_xgb = metrics.accuracy_score(y_test,pred_xgb)
 accuracy_score_knn = metrics.accuracy_score(y_test,pred_knn)
 accuracy_score_svm = metrics.accuracy_score(y_test,pred_svm)
 accuracy_score_random_forest = metrics.accuracy_score(y_test,pred_rand_forest)
@@ -315,7 +316,7 @@ accuracy_score_random_forest = metrics.accuracy_score(y_test,pred_rand_forest)
 precision_score_tree = metrics.precision_score(y_test,pred_tree)
 precision_score_log_reg = metrics.precision_score(y_test,pred_log_reg)
 precision_score_naive = metrics.precision_score(y_test,pred_naive)
-precision_score_gb = metrics.precision_score(y_test,pred_gb)
+precision_score_xgb = metrics.precision_score(y_test,pred_xgb)
 precision_score_knn = metrics.precision_score(y_test,pred_knn)
 precision_score_svm = metrics.precision_score(y_test,pred_svm)
 precision_score_random_forest = metrics.precision_score(y_test,pred_rand_forest)
@@ -324,16 +325,16 @@ precision_score_random_forest = metrics.precision_score(y_test,pred_rand_forest)
 f1_score_tree = metrics.f1_score(y_test,pred_tree)
 f1_score_log_reg = metrics.f1_score(y_test,pred_log_reg)
 f1_score_naive = metrics.f1_score(y_test,pred_naive)
-f1_score_gb = metrics.f1_score(y_test,pred_gb)
+f1_score_xgb = metrics.f1_score(y_test,pred_xgb)
 f1_score_knn = metrics.f1_score(y_test,pred_knn)
 f1_svm = metrics.f1_score(y_test,pred_svm)
 f1_random_forest = metrics.f1_score(y_test,pred_rand_forest)
 
 
 # Bar plot della recall
-recall_score = [recall_tree, recall_naive, recall_knn, recall_svm, recall_log_reg, recall_gb, recall_random_forest]
+recall_score = [recall_tree, recall_naive, recall_knn, recall_svm, recall_log_reg, recall_xgb, recall_random_forest]
  
-algorithm = ['DECISION TREE', 'NAIVE',  'KNN','SVM','LOGISTIC',  'GRADIENT BOOSTING', 'RANDOM FOREST', ]
+algorithm = ['DECISION TREE', 'NAIVE',  'KNN','SVM','LOGISTIC',  'XGBoost', 'RANDOM FOREST', ]
 data_plot = pd.DataFrame(recall_score,algorithm)
 
 sns.catplot(data=data_plot, x=recall_score, y=algorithm, kind='bar',height=6,aspect=2,palette='Dark2')
@@ -346,9 +347,9 @@ plt.figure(figsize=(10, 8))
 
 models = [{
     'label': 'Logistic Regression',
-    'model': LogisticRegression(),},{
-    'label': 'Gradient Boosting',
-    'model': GradientBoostingClassifier(),},
+    'model': LogisticRegression(),},
+    {'label': 'XGBoost',
+    'model': XGBClassifier(),},
     {
     'label': 'SVM',
     'model': SVC(probability=True),},
@@ -424,14 +425,9 @@ grid_knn = {'n_neighbors':[2,3,4,5,6,7,8,9,10,12,15,18,20,25,30], 'metric':['man
 grid_tree = {'criterion':['gini','entropy'],
              'max_depth':[4,5,6,7,8,9,10,11,12,15,20,30,40,50,70,90,120,150]}
 
-grid_gb = {"criterion": ["friedman_mse",  "mae"],
-              "loss":["deviance"],
-              "max_features":["log2","sqrt"],
-              'learning_rate': [0.01,0.05,0.1, 0.2],
-              'max_depth': [3,4,5],
-              'min_samples_leaf': [4,5,6],
-              'subsample': [0.6,0.7,0.8],
-              'n_estimators': [10,100,200]}
+grid_xgb = {
+ 'max_depth':range(3,10,2),
+ 'min_child_weight':range(1,6,2)}
 
 
 
@@ -440,7 +436,7 @@ knn = KNeighborsClassifier()
 tree = DecisionTreeClassifier(random_state=1234)
 rand_forest = RandomForestClassifier(random_state=1234)
 svm = SVC(random_state=1234)
-gb = GradientBoostingClassifier(random_state=1234)
+xgb = XGBClassifier(seed=1234)
 
 
 log_reg_cv = GridSearchCV(log_reg, grid_log_reg, cv=10, scoring = 'recall')
@@ -473,10 +469,10 @@ tree_cv.fit(X_train,y_train)
 pred_tree_cv = tree_cv.predict(X_test)
 score_tree_cv = tree_cv.score(X_test,y_test)
 
-gb_cv = GridSearchCV(gb, grid_gb, cv=10, scoring = 'recall')
-gb_cv.fit(X_train, y_train)
-pred_gb_cv = gb_cv.predict(X_test)
-score_gb_cv = gb_cv.score(X_test, y_test)
+xgb_cv = GridSearchCV(xgb, grid_xgb, cv=10, scoring = 'recall')
+xgb_cv.fit(X_train, y_train)
+pred_xgb_cv = xgb_cv.predict(X_test)
+score_xgb_cv = xgb_cv.score(X_test, y_test)
 
 
 
@@ -488,7 +484,7 @@ score_gb_cv = gb_cv.score(X_test, y_test)
 recall_log_reg_cv = metrics.recall_score(y_test,pred_log_reg_cv)
 recall_svm_cv = metrics.recall_score(y_test,pred_svm_cv)
 recall_random_forest_cv = metrics.recall_score(y_test,pred_rand_forest_cv)
-recall_gb_cv = metrics.recall_score(y_test,pred_gb_cv)
+recall_xgb_cv = metrics.recall_score(y_test,pred_xgb_cv)
 recall_knn_cv = metrics.recall_score(y_test,pred_knn_cv)
 recall_tree_cv = metrics.recall_score(y_test,pred_tree_cv)
 
@@ -496,14 +492,14 @@ recall_tree_cv = metrics.recall_score(y_test,pred_tree_cv)
 accuracy_log_reg_cv = metrics.accuracy_score(y_test,pred_log_reg_cv)
 accuracy_svm_cv = metrics.accuracy_score(y_test,pred_svm_cv)
 accuracy_random_forest_cv = metrics.accuracy_score(y_test,pred_rand_forest_cv)
-accuracy_gb_cv = metrics.accuracy_score(y_test,pred_gb_cv)
+accuracy_xgb_cv = metrics.accuracy_score(y_test,pred_xgb_cv)
 accuracy_knn_cv = metrics.accuracy_score(y_test,pred_knn_cv)
 accuracy_tree_cv = metrics.accuracy_score(y_test,pred_tree_cv)
 
 #PRECISION
 precision_score_tree_cv = metrics.precision_score(y_test,pred_tree_cv)
 precision_score_log_reg_cv = metrics.precision_score(y_test,pred_log_reg_cv)
-precision_score_gb_cv = metrics.precision_score(y_test,pred_gb_cv)
+precision_score_xgb_cv = metrics.precision_score(y_test,pred_xgb_cv)
 precision_score_knn_cv = metrics.precision_score(y_test,pred_knn_cv)
 precision_score_svm_cv= metrics.precision_score(y_test,pred_svm_cv)
 precision_score_random_forest_cv = metrics.precision_score(y_test,pred_rand_forest_cv)
@@ -511,7 +507,7 @@ precision_score_random_forest_cv = metrics.precision_score(y_test,pred_rand_fore
 #F1 SCORE
 f1_score_tree_cv = metrics.f1_score(y_test,pred_tree_cv)
 f1_score_log_reg_cv = metrics.f1_score(y_test,pred_log_reg_cv)
-f1_score_gb_cv = metrics.f1_score(y_test,pred_gb_cv)
+f1_score_xgb_cv = metrics.f1_score(y_test,pred_xgb_cv)
 f1_score_knn_cv= metrics.f1_score(y_test,pred_knn_cv)
 f1_score_svm_cv = metrics.f1_score(y_test,pred_svm_cv)
 f1_score_random_forest_cv = metrics.f1_score(y_test,pred_rand_forest_cv)
@@ -519,7 +515,7 @@ f1_score_random_forest_cv = metrics.f1_score(y_test,pred_rand_forest_cv)
 #AUC
 auc_tree_cv = metrics.roc_auc_score(y_test,pred_tree_cv)
 auc_log_reg_cv = metrics.roc_auc_score(y_test,pred_log_reg_cv)
-auc_gb_cv = metrics.roc_auc_score(y_test,pred_gb_cv)
+auc_xgb_cv = metrics.roc_auc_score(y_test,pred_xgb_cv)
 auc_knn_cv = metrics.roc_auc_score(y_test,pred_knn_cv)
 auc_svm_cv = metrics.roc_auc_score(y_test,pred_svm_cv)
 auc_random_forest_cv = metrics.roc_auc_score(y_test,pred_rand_forest_cv)
@@ -528,12 +524,12 @@ auc_random_forest_cv = metrics.roc_auc_score(y_test,pred_rand_forest_cv)
 
 #BAR PLOT RECALL
 Recall_cv = [recall_tree_cv,recall_knn_cv,recall_svm_cv,recall_log_reg_cv,
-             recall_gb_cv, recall_random_forest_cv]
+             recall_xgb_cv, recall_random_forest_cv]
 
-Recall = [recall_tree, recall_knn, recall_svm, recall_log_reg, recall_gb, recall_random_forest]
+Recall = [recall_tree, recall_knn, recall_svm, recall_log_reg, recall_xgb, recall_random_forest]
  
     
-algorithm = ['DECISION TREE',  'KNN','SVM','LOGISTIC',  'GRADIENT BOOSTING', 'RANDOM FOREST', ]
+algorithm = ['DECISION TREE',  'KNN','SVM','LOGISTIC',  'XGBoost', 'RANDOM FOREST', ]
 
 data_plot = pd.DataFrame(recall,index=algorithm,columns=['Recall'])
 data_plot['Recall_cv'] = Recall_cv
