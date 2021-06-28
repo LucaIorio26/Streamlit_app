@@ -531,7 +531,7 @@ Recall = [recall_tree, recall_knn, recall_svm, recall_log_reg, recall_xgb, recal
     
 algorithm = ['DECISION TREE',  'KNN','SVM','LOGISTIC',  'XGBoost', 'RANDOM FOREST', ]
 
-data_plot = pd.DataFrame(recall,index=algorithm,columns=['Recall'])
+data_plot = pd.DataFrame(Recall,index=algorithm,columns=['Recall'])
 data_plot['Recall_cv'] = Recall_cv
 
 data_plot['Algoritmi'] = algorithm
