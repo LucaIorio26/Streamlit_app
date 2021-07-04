@@ -51,7 +51,7 @@ def main():
     st.sidebar.header('Come funziona?')
     st.sidebar.info("Completando ogni campo a destra è possibile ottenere una previsione abbastanza accurata circa le possibilità di sopravvivenza al termine della terapia.")
     st.sidebar.header("Quali strumenti sono stati utlizzati?")
-    st.sidebar.info("Il classificatore utilizzato è il migliore tra i modelli addestrati durante una procedura di ensemble mediante una 5-Fold Cross Validation. In particolare si utilizza l'algoritmo Gradient Boosting, che si basa su una tecnica di ensemble con alberi di decisione, contenuta nel framework Scikit-learn. ")
+    st.sidebar.info("Il classificatore utilizzato è il migliore tra i modelli addestrati durante una procedura di ensemble mediante una 10-Fold Cross Validation. In particolare si utilizza l'algoritmo Random Forests, che si basa su una tecnica di ensemble con alberi di decisione, contenuta nel framework Scikit-learn. ")
     st.markdown("<h5> Compila i seguenti campi: </h5>", unsafe_allow_html=True)
     sex = st.selectbox('Indica il tuo genere  (DONNA = 0, UOMO = 1)', (0, 1))
     age = st.slider("Indica la tua età?", min_value=40, max_value=87, value=46)
